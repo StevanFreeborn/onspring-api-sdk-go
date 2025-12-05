@@ -1,0 +1,13 @@
+/bin/
+/dist/
+*.exe
+*.dll
+*.so
+*.dylib
+*.test
+go.work
+go.work.sum
+*.out
+*.html
+cover.out
+coverage.txt
