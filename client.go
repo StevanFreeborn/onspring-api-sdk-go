@@ -143,7 +143,7 @@ func (c *Client) handleAPIError(resp *http.Response) error {
 // Returns:
 //   - *http.Request: The prepared HTTP request
 //   - error: An error if the context is nil or request creation fails
-func (c *Client) newRequest(ctx context.Context, method, path string, body any) (*http.Request, error) {
+func (c *Client) newRequest(ctx context.Context, method, path string, _ any) (*http.Request, error) {
 	if ctx == nil {
 		return nil, fmt.Errorf("context must not be nil")
 	}

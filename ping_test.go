@@ -14,7 +14,9 @@ func TestGet(t *testing.T) {
 			w.WriteHeader(http.StatusOK)
 		})
 
-		err := client.Ping.Get(nil)
+		var nilContext context.Context = nil
+
+		err := client.Ping.Get(nilContext)
 
 		if err == nil {
 			t.Errorf("Expected error for nil context, got nil")
@@ -26,7 +28,7 @@ func TestGet(t *testing.T) {
 			w.WriteHeader(http.StatusOK)
 		})
 
-		ctx, cancel := context.WithCancel(context.Background())
+		ctx, cancel := context.WithCancel(t.Context())
 
 		cancel()
 
@@ -44,7 +46,7 @@ func TestGet(t *testing.T) {
 			onspring.WithHTTPClient(&http.Client{Transport: &ErrorTransport{}}),
 		)
 
-		err := client.Ping.Get(context.Background())
+		err := client.Ping.Get(t.Context())
 
 		if err == nil {
 			t.Errorf("Expected network error, got nil")
@@ -62,7 +64,7 @@ func TestGet(t *testing.T) {
 			onspring.WithHTTPClient(client.HTTPClient()),
 		)
 
-		err := invalidClient.Ping.Get(context.Background())
+		err := invalidClient.Ping.Get(t.Context())
 
 		if err == nil {
 			t.Errorf("Expected request creation error, got nil")
@@ -82,7 +84,7 @@ func TestGet(t *testing.T) {
 			w.WriteHeader(http.StatusOK)
 		})
 
-		err := client.Ping.Get(context.Background())
+		err := client.Ping.Get(t.Context())
 
 		if err != nil {
 			t.Errorf("Expected no error, got %v", err)
@@ -94,7 +96,7 @@ func TestGet(t *testing.T) {
 			w.WriteHeader(http.StatusInternalServerError)
 		})
 
-		err := client.Ping.Get(context.Background())
+		err := client.Ping.Get(t.Context())
 
 		if err == nil {
 			t.Errorf("Expected error, got nil")
