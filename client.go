@@ -95,7 +95,9 @@ func (c *Client) do(req *http.Request) error {
 		return err
 	}
 
-	defer resp.Body.Close()
+	defer func() {
+		_ = resp.Body.Close()
+	}()
 
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
 		return c.handleAPIError(resp)
