@@ -46,6 +46,7 @@ func TestGet(t *testing.T) {
 			onspring.WithHTTPClient(&http.Client{Transport: &ErrorTransport{}}),
 		)
 
+		context.TODO()
 		err := client.Ping.Get(t.Context())
 
 		if err == nil {
