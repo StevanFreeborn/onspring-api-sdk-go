@@ -36,4 +36,5 @@ jobs:
       - name: Upload test coverage
         uses: actions/upload-artifact@v6
         with:
-          name: coverage.html
+          name: coverage-report
+          path: coverage.html
