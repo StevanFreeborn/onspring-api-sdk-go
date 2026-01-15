@@ -36,7 +36,7 @@ type PingEndpoint struct {
 //	    log.Fatal("Ping failed:", err)
 //	}
 func (p *PingEndpoint) Get(ctx context.Context) error {
-	req, err := p.client.newRequest(ctx, http.MethodGet, pingPath, nil)
+	req, err := p.client.newRequest(ctx, http.MethodGet, pingPath, nil, nil)
 
 	if err != nil {
 		return err

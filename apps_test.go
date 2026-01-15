@@ -2,13 +2,15 @@ package onspring_test
 
 import (
 	"context"
+	"encoding/json"
 	"net/http"
+	"reflect"
 	"testing"
 
 	"github.com/StevanFreeborn/onspring-api-sdk-go"
 )
 
-func TestPing(t *testing.T) {
+func TestApps(t *testing.T) {
 	t.Run("Get", func(t *testing.T) {
 		t.Run("it should return an error if context is nil", func(t *testing.T) {
 			_, client := setupMockServer(t, func(w http.ResponseWriter, r *http.Request) {
@@ -17,7 +19,7 @@ func TestPing(t *testing.T) {
 
 			var nilContext context.Context = nil
 
-			err := client.Ping.Get(nilContext)
+			_, err := client.Apps.Get(nilContext)
 
 			if err == nil {
 				t.Errorf("Expected error for nil context, got nil")
@@ -33,7 +35,7 @@ func TestPing(t *testing.T) {
 
 			cancel()
 
-			err := client.Ping.Get(ctx)
+			_, err := client.Apps.Get(ctx)
 
 			if err == nil {
 				t.Errorf("Expected error for canceled context, got nil")
@@ -47,7 +49,7 @@ func TestPing(t *testing.T) {
 				onspring.WithHTTPClient(&http.Client{Transport: &ErrorTransport{}}),
 			)
 
-			err := client.Ping.Get(t.Context())
+			_, err := client.Apps.Get(t.Context())
 
 			if err == nil {
 				t.Errorf("Expected network error, got nil")
@@ -65,39 +67,61 @@ func TestPing(t *testing.T) {
 				onspring.WithHTTPClient(client.HTTPClient()),
 			)
 
-			err := invalidClient.Ping.Get(t.Context())
+			_, err := invalidClient.Apps.Get(t.Context())
 
 			if err == nil {
 				t.Errorf("Expected request creation error, got nil")
 			}
 		})
 
-		t.Run("it should perform a GET request to the /ping endpoint and return no error if receives 200 status code", func(t *testing.T) {
+		t.Run("it should perform a GET request to the /apps endpoint and return page of apps if receives 200 status code", func(t *testing.T) {
+			expectedPage := onspring.Page[onspring.App]{
+				TotalPages:   1,
+				TotalRecords: 1,
+				PageNumber:   1,
+				PageSize:     1,
+				Items: []onspring.App{
+					{
+						Href: "https://test.com",
+						Id:   1,
+						Name: "App",
+					},
+				},
+			}
+
 			_, client := setupMockServer(t, func(w http.ResponseWriter, r *http.Request) {
 				if r.Method != http.MethodGet {
 					t.Errorf("Expected GET method, got %s", r.Method)
 				}
 
-				if r.URL.Path != "/ping" {
-					t.Errorf("Expected /ping endpoint, got %s", r.URL.Path)
+				if r.URL.Path != "/apps" {
+					t.Errorf("Expected /apps endpoint, got %s", r.URL.Path)
 				}
 
+				jsonData, _ := json.Marshal(expectedPage)
+
 				w.WriteHeader(http.StatusOK)
+				w.Header().Set("Content-Type", "application/json")
+				w.Write(jsonData)
 			})
 
-			err := client.Ping.Get(t.Context())
+			page, err := client.Apps.Get(t.Context())
 
 			if err != nil {
 				t.Errorf("Expected no error, got %v", err)
 			}
+
+			if !reflect.DeepEqual(expectedPage, page) {
+				t.Errorf("Expected %v but got %v", expectedPage, page)
+			}
 		})
 
-		t.Run("it should return an error if the /ping endpoint returns a non-200 status code", func(t *testing.T) {
+		t.Run("it should return an error if the /apps endpoint returns a non-200 status code", func(t *testing.T) {
 			_, client := setupMockServer(t, func(w http.ResponseWriter, r *http.Request) {
 				w.WriteHeader(http.StatusInternalServerError)
 			})
 
-			err := client.Ping.Get(t.Context())
+			_, err := client.Apps.Get(t.Context())
 
 			if err == nil {
 				t.Errorf("Expected error, got nil")
