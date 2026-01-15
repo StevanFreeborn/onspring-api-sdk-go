@@ -21,8 +21,8 @@ type App struct {
 
 func (p *AppsEndpoint) Get(ctx context.Context, pagingOpts ...PagingOption) (Page[App], error) {
 	pagingRequest := &PagingRequest{
-		pageSize:   1,
-		pageNumber: 50,
+		pageNumber: 1,
+		pageSize:   50,
 	}
 
 	for _, opt := range pagingOpts {

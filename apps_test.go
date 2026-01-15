@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"reflect"
+	"strconv"
 	"testing"
 
 	"github.com/StevanFreeborn/onspring-api-sdk-go"
@@ -75,6 +76,9 @@ func TestApps(t *testing.T) {
 		})
 
 		t.Run("it should perform a GET request to the /apps endpoint and return page of apps if receives 200 status code", func(t *testing.T) {
+			expectedPageNumber := 1
+			expectedPageSize := 50
+
 			expectedPage := onspring.Page[onspring.App]{
 				TotalPages:   1,
 				TotalRecords: 1,
@@ -98,6 +102,17 @@ func TestApps(t *testing.T) {
 					t.Errorf("Expected /apps endpoint, got %s", r.URL.Path)
 				}
 
+				pageNumber := r.URL.Query().Get("pageNumber")
+				pageSize := r.URL.Query().Get("pageSize")
+
+				if pageNumber != strconv.Itoa(expectedPageNumber) {
+					t.Errorf("Expected query param pageNumber to be %d but got %s", expectedPageNumber, pageNumber)
+				}
+
+				if pageSize != strconv.Itoa(expectedPageSize) {
+					t.Errorf("Expected query param pageSize to be %d but got %s", expectedPageSize, pageSize)
+				}
+
 				jsonData, _ := json.Marshal(expectedPage)
 
 				w.WriteHeader(http.StatusOK)
@@ -114,6 +129,40 @@ func TestApps(t *testing.T) {
 			if !reflect.DeepEqual(expectedPage, page) {
 				t.Errorf("Expected %v but got %v", expectedPage, page)
 			}
+		})
+
+		t.Run("it should perform a GET request to the /apps endpoint with non-default paging information when provided", func(t *testing.T) {
+			expectedPageNumber := 2
+			expectedPageSize := 1
+
+			_, client := setupMockServer(t, func(w http.ResponseWriter, r *http.Request) {
+				if r.Method != http.MethodGet {
+					t.Errorf("Expected GET method, got %s", r.Method)
+				}
+
+				if r.URL.Path != "/apps" {
+					t.Errorf("Expected /apps endpoint, got %s", r.URL.Path)
+				}
+
+				pageNumber := r.URL.Query().Get("pageNumber")
+				pageSize := r.URL.Query().Get("pageSize")
+
+				if pageNumber != strconv.Itoa(expectedPageNumber) {
+					t.Errorf("Expected query param pageNumber to be %d but got %s", expectedPageNumber, pageNumber)
+				}
+
+				if pageSize != strconv.Itoa(expectedPageSize) {
+					t.Errorf("Expected query param pageSize to be %d but got %s", expectedPageSize, pageSize)
+				}
+
+				w.WriteHeader(http.StatusOK)
+			})
+
+			client.Apps.Get(
+				t.Context(),
+				onspring.ForPageNumber(expectedPageNumber),
+				onspring.WithPageSize(expectedPageSize),
+			)
 		})
 
 		t.Run("it should return an error if the /apps endpoint returns a non-200 status code", func(t *testing.T) {
