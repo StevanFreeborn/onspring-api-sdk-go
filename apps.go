@@ -3,7 +3,6 @@ package onspring
 import (
 	"context"
 	"net/http"
-	"strconv"
 )
 
 const (
@@ -12,28 +11,6 @@ const (
 
 type AppsEndpoint struct {
 	client *Client
-}
-
-type PagingRequest struct {
-	pageSize   int
-	pageNumber int
-}
-
-func (pr *PagingRequest) ToParams() map[string]string {
-	return map[string]string{
-		"pageSize":   strconv.Itoa(pr.pageNumber),
-		"pageNumber": strconv.Itoa(pr.pageSize),
-	}
-}
-
-type PagingOption func(*PagingRequest)
-
-type Page[T any] struct {
-	PageNumber   int `json:"pageNumber"`
-	PageSize     int `json:"pageSize"`
-	TotalPages   int `json:"totalPages"`
-	TotalRecords int `json:"totalRecords"`
-	Items        []T `json:"items"`
 }
 
 type App struct {
