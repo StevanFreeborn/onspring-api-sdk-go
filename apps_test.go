@@ -356,7 +356,7 @@ func TestApps(t *testing.T) {
 
 					w.WriteHeader(http.StatusOK)
 					w.Header().Set("Content-Type", "application/json")
-					w.Write(jsonData)
+					_, _ = w.Write(jsonData)
 				}
 			})
 
@@ -409,7 +409,7 @@ func TestApps(t *testing.T) {
 
 					w.WriteHeader(http.StatusOK)
 					w.Header().Set("Content-Type", "application/json")
-					w.Write(jsonData)
+					_, _ = w.Write(jsonData)
 				}
 			})
 
@@ -527,7 +527,7 @@ func TestApps(t *testing.T) {
 
 				w.WriteHeader(http.StatusOK)
 				w.Header().Set("Content-Type", "application/json")
-				w.Write(jsonData)
+				_, _ = w.Write(jsonData)
 			})
 
 			batch, _ := client.Apps.GetMany(t.Context(), []int{apps[0].Id})
@@ -635,7 +635,7 @@ func TestApps(t *testing.T) {
 
 				w.WriteHeader(http.StatusOK)
 				w.Header().Set("Content-Type", "application/json")
-				w.Write(jsonData)
+				_, _ = w.Write(jsonData)
 			})
 
 			app, _ := client.Apps.Get(t.Context(), expectedApp.Id)
