@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"net/url"
 	"strings"
 	"time"
 )
@@ -41,6 +42,8 @@ type Client struct {
 
 	// Ping provides access to the ping endpoint for health checks.
 	Ping *PingEndpoint
+	// Apps provides access to the apps within an Onspring instance.
+	Apps *AppsEndpoint
 }
 
 // NewClient creates a new Onspring API client with the provided API key.
@@ -61,7 +64,7 @@ type Client struct {
 //
 //	client := onspring.NewClient("your-api-key")
 //	client := onspring.NewClient("your-api-key", onspring.WithHTTPClient(customHTTPClient))
-func NewClient(apiKey string, opts ...Option) *Client {
+func NewClient(apiKey string, opts ...ClientOption) *Client {
 	c := &Client{
 		httpClient: &http.Client{Timeout: defaultTimeout},
 		baseURL:    defaultBaseURL,
@@ -74,6 +77,7 @@ func NewClient(apiKey string, opts ...Option) *Client {
 	}
 
 	c.Ping = &PingEndpoint{client: c}
+	c.Apps = &AppsEndpoint{client: c}
 
 	return c
 }
@@ -104,6 +108,35 @@ func (c *Client) do(req *http.Request) error {
 	}
 
 	return nil
+}
+
+// doWithJsonResponse executes an HTTP request and decodes the JSON response.
+// It performs the HTTP call, checks the response status code, and decodes
+// the JSON response body into the provided variable.
+//
+// Parameters:
+//   - req: The HTTP request to execute
+//   - v: A pointer to the variable where the decoded JSON response will be stored
+//
+// Returns:
+//   - error: nil if the request and decoding succeed, or an error if the request fails,
+//     returns a non-2xx status code, or if JSON decoding fails
+func (c *Client) doWithJsonResponse(req *http.Request, v any) error {
+	resp, err := c.httpClient.Do(req)
+
+	if err != nil {
+		return err
+	}
+
+	defer func() {
+		_ = resp.Body.Close()
+	}()
+
+	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
+		return c.handleAPIError(resp)
+	}
+
+	return json.NewDecoder(resp.Body).Decode(v)
 }
 
 // handleAPIError processes error responses from the Onspring API.
@@ -140,21 +173,35 @@ func (c *Client) handleAPIError(resp *http.Response) error {
 //   - ctx: The context for the request
 //   - method: The HTTP method
 //   - path: The API endpoint path
+//   - queryParams: The query parameters for the request
 //   - body: The request body
 //
 // Returns:
 //   - *http.Request: The prepared HTTP request
 //   - error: An error if the context is nil or request creation fails
-func (c *Client) newRequest(ctx context.Context, method, path string, _ any) (*http.Request, error) {
+func (c *Client) newRequest(ctx context.Context, method, path string, queryParams map[string]string, _ any) (*http.Request, error) {
 	if ctx == nil {
 		return nil, fmt.Errorf("context must not be nil")
 	}
 
 	fullURL := fmt.Sprintf("%s/%s", strings.TrimRight(c.baseURL, "/"), strings.TrimLeft(path, "/"))
+	validUrl, urlParsingError := url.Parse(fullURL)
+
+	if urlParsingError != nil {
+		return nil, fmt.Errorf("failed to parse the request url: %w", urlParsingError)
+	}
+
+	q := validUrl.Query()
+
+	for key, value := range queryParams {
+		q.Add(key, value)
+	}
+
+	validUrl.RawQuery = q.Encode()
 
 	var bodyReader io.Reader
 
-	req, err := http.NewRequestWithContext(ctx, method, fullURL, bodyReader)
+	req, err := http.NewRequestWithContext(ctx, method, validUrl.String(), bodyReader)
 
 	if err != nil {
 		return nil, fmt.Errorf("failed to create request: %w", err)
