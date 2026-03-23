@@ -2,13 +2,13 @@ package onspring
 
 import (
 	"context"
+	"fmt"
 	"iter"
 	"net/http"
 )
 
 const (
-	appsPath      = "/apps"
-	appsBatchPath = "/apps/batch-get"
+	appsPath = "/apps"
 )
 
 // AppsEndpoint provides access to apps in an Onspring instance.
@@ -105,13 +105,14 @@ func (a *AppsEndpoint) ListAll(ctx context.Context, pagingOpts ...PagingOption) 
 //
 // Parameters:
 //   - ctx: The context for the request
-//   - appIds: The ids of the apps to retrieve
+//   - ids: The ids of the apps to retrieve
 //
 // Returns:
 //   - AppBatch: A batch of apps
 //   - error: An error if the request fails
-func (a *AppsEndpoint) GetMany(ctx context.Context, appIds []int) (AppBatch, error) {
-	req, requestCreationErr := a.client.newRequest(ctx, http.MethodPost, appsBatchPath, nil, appIds)
+func (a *AppsEndpoint) GetMany(ctx context.Context, ids []int) (AppBatch, error) {
+	path := fmt.Sprintf("%s/batch-get", appsPath)
+	req, requestCreationErr := a.client.newRequest(ctx, http.MethodPost, path, nil, ids)
 
 	var appBatch AppBatch
 
@@ -126,6 +127,34 @@ func (a *AppsEndpoint) GetMany(ctx context.Context, appIds []int) (AppBatch, err
 	}
 
 	return appBatch, nil
+}
+
+// Get retrieves an app from the Onspring API.
+//
+// Parameters:
+//   - ctx: The context for the request
+//   - id: The id of the app to retrieve
+//
+// Returns:
+//   - App: An app
+//   - error: An error if the request fails
+func (a *AppsEndpoint) Get(ctx context.Context, id int) (App, error) {
+	path := fmt.Sprintf("%s/id/%d", appsPath, id)
+	req, requestCreationErr := a.client.newRequest(ctx, http.MethodGet, path, nil, nil)
+
+	var app App
+
+	if requestCreationErr != nil {
+		return app, requestCreationErr
+	}
+
+	responseErr := a.client.doWithJsonResponse(req, &app)
+
+	if responseErr != nil {
+		return app, responseErr
+	}
+
+	return app, nil
 }
 
 func createPagingRequest(pagingOpts []PagingOption) *PagingRequest {

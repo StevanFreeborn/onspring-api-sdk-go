@@ -3,6 +3,7 @@ package onspring_test
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"reflect"
 	"slices"
@@ -533,6 +534,114 @@ func TestApps(t *testing.T) {
 
 			if !reflect.DeepEqual(expectedBatch, batch) {
 				t.Errorf("Expected %v but got %v", expectedBatch, batch)
+			}
+		})
+	})
+
+	t.Run("Get", func(t *testing.T) {
+		t.Run("it should return an error if context is nil", func(t *testing.T) {
+			_, client := setupMockServer(t, func(w http.ResponseWriter, r *http.Request) {
+				w.WriteHeader(http.StatusOK)
+			})
+
+			var nilContext context.Context = nil
+
+			_, err := client.Apps.Get(nilContext, 0)
+
+			if err == nil {
+				t.Errorf("Expected error for nil context, got nil")
+			}
+		})
+
+		t.Run("it should return an error if context is canceled", func(t *testing.T) {
+			_, client := setupMockServer(t, func(w http.ResponseWriter, r *http.Request) {
+				w.WriteHeader(http.StatusOK)
+			})
+
+			ctx, cancel := context.WithCancel(t.Context())
+
+			cancel()
+
+			_, err := client.Apps.Get(ctx, 0)
+
+			if err == nil {
+				t.Errorf("Expected error for canceled context, got nil")
+			}
+		})
+
+		t.Run("it should return an error if encounters a network error", func(t *testing.T) {
+			client := onspring.NewClient(
+				"test-api-key",
+				onspring.WithBaseURL("http://invalid-url"),
+				onspring.WithHTTPClient(&http.Client{Transport: &ErrorTransport{}}),
+			)
+
+			_, err := client.Apps.Get(t.Context(), 0)
+
+			if err == nil {
+				t.Errorf("Expected network error, got nil")
+			}
+		})
+
+		t.Run("it should return an error if create a request fails", func(t *testing.T) {
+			_, client := setupMockServer(t, func(w http.ResponseWriter, r *http.Request) {
+				w.WriteHeader(http.StatusOK)
+			})
+
+			invalidClient := onspring.NewClient(
+				"test-api-key",
+				onspring.WithBaseURL("http://[::1]:namedport"),
+				onspring.WithHTTPClient(client.HTTPClient()),
+			)
+
+			_, err := invalidClient.Apps.Get(t.Context(), 0)
+
+			if err == nil {
+				t.Errorf("Expected request creation error, got nil")
+			}
+		})
+
+		t.Run("it should return an error if the /apps/id/:id endpoint returns a non-200 status code", func(t *testing.T) {
+			_, client := setupMockServer(t, func(w http.ResponseWriter, r *http.Request) {
+				w.WriteHeader(http.StatusInternalServerError)
+			})
+
+			_, err := client.Apps.Get(t.Context(), 0)
+
+			if err == nil {
+				t.Errorf("Expected error, got nil")
+			}
+		})
+
+		t.Run("it should return an app if the /apps/id/:id endpoint returns a 200 status code", func(t *testing.T) {
+			expectedApp := onspring.App{
+				Href: "https://test.com",
+				Id:   1,
+				Name: "App",
+			}
+
+			_, client := setupMockServer(t, func(w http.ResponseWriter, r *http.Request) {
+				if r.Method != http.MethodGet {
+					t.Errorf("Expected GET method, got %s", r.Method)
+				}
+
+				expectedPath := fmt.Sprintf("/apps/id/%d", expectedApp.Id)
+
+				if r.URL.Path != expectedPath {
+					t.Errorf("Expected %s endpoint, got %s", expectedPath, r.URL.Path)
+				}
+
+				jsonData, _ := json.Marshal(expectedApp)
+
+				w.WriteHeader(http.StatusOK)
+				w.Header().Set("Content-Type", "application/json")
+				w.Write(jsonData)
+			})
+
+			app, _ := client.Apps.Get(t.Context(), expectedApp.Id)
+
+			if !reflect.DeepEqual(expectedApp, app) {
+				t.Errorf("Expected %v but got %v", expectedApp, app)
 			}
 		})
 	})
