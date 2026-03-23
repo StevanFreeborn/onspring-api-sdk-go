@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"reflect"
+	"slices"
 	"strconv"
 	"testing"
 
@@ -174,6 +175,364 @@ func TestApps(t *testing.T) {
 
 			if err == nil {
 				t.Errorf("Expected error, got nil")
+			}
+		})
+	})
+
+	t.Run("GetAll", func(t *testing.T) {
+		t.Run("it should return an error if fails to retrieve any pages of apps", func(t *testing.T) {
+			_, client := setupMockServer(t, func(w http.ResponseWriter, r *http.Request) {
+				w.WriteHeader(http.StatusInternalServerError)
+			})
+
+			for _, err := range client.Apps.GetAll(t.Context()) {
+				if err == nil {
+					t.Errorf("Expected error, got nil")
+				}
+			}
+		})
+
+		t.Run("it should return all the apps from multiple pages", func(t *testing.T) {
+			expectedApps := []onspring.App{
+				{
+					Href: "https://test.com",
+					Id:   1,
+					Name: "App",
+				},
+				{
+					Href: "https://test.com",
+					Id:   2,
+					Name: "App",
+				},
+			}
+
+			pageOne := onspring.Page[onspring.App]{
+				TotalPages:   2,
+				TotalRecords: 2,
+				PageNumber:   1,
+				PageSize:     1,
+				Items:        []onspring.App{expectedApps[0]},
+			}
+
+			pageTwo := onspring.Page[onspring.App]{
+				TotalPages:   2,
+				TotalRecords: 2,
+				PageNumber:   2,
+				PageSize:     1,
+				Items:        []onspring.App{expectedApps[1]},
+			}
+
+			_, client := setupMockServer(t, func(w http.ResponseWriter, r *http.Request) {
+				if r.Method != http.MethodGet {
+					t.Errorf("Expected GET method, got %s", r.Method)
+				}
+
+				if r.URL.Path != "/apps" {
+					t.Errorf("Expected /apps endpoint, got %s", r.URL.Path)
+				}
+
+				pageNumber := r.URL.Query().Get("pageNumber")
+
+				if pageNumber == "1" {
+					jsonData, _ := json.Marshal(pageOne)
+
+					w.WriteHeader(http.StatusOK)
+					w.Header().Set("Content-Type", "application/json")
+					w.Write(jsonData)
+				}
+
+				if pageNumber == "2" {
+					jsonData, _ := json.Marshal(pageTwo)
+
+					w.WriteHeader(http.StatusOK)
+					w.Header().Set("Content-Type", "application/json")
+					w.Write(jsonData)
+				}
+			})
+
+			retrievedApps := []onspring.App{}
+
+			for app, _ := range client.Apps.GetAll(t.Context()) {
+				retrievedApps = append(retrievedApps, app)
+			}
+
+			if !slices.Equal(expectedApps, retrievedApps) {
+				t.Errorf("Expected %v but got %v", expectedApps, retrievedApps)
+			}
+		})
+
+		t.Run("it should return apps and errors if some pages fail and some succeed", func(t *testing.T) {
+			expectedApps := []onspring.App{
+				{
+					Href: "https://test.com",
+					Id:   1,
+					Name: "App",
+				},
+			}
+
+			pageOne := onspring.Page[onspring.App]{
+				TotalPages:   2,
+				TotalRecords: 2,
+				PageNumber:   1,
+				PageSize:     1,
+				Items:        []onspring.App{expectedApps[0]},
+			}
+
+			_, client := setupMockServer(t, func(w http.ResponseWriter, r *http.Request) {
+				if r.Method != http.MethodGet {
+					t.Errorf("Expected GET method, got %s", r.Method)
+				}
+
+				if r.URL.Path != "/apps" {
+					t.Errorf("Expected /apps endpoint, got %s", r.URL.Path)
+				}
+
+				pageNumber := r.URL.Query().Get("pageNumber")
+
+				if pageNumber == "1" {
+					jsonData, _ := json.Marshal(pageOne)
+
+					w.WriteHeader(http.StatusOK)
+					w.Header().Set("Content-Type", "application/json")
+					w.Write(jsonData)
+				}
+
+				if pageNumber == "2" {
+					w.WriteHeader(http.StatusInternalServerError)
+				}
+			})
+
+			retrievedApps := []onspring.App{}
+			encounteredErrors := []error{}
+
+			for app, err := range client.Apps.GetAll(t.Context()) {
+				if err != nil {
+					encounteredErrors = append(encounteredErrors, err)
+				} else {
+					retrievedApps = append(retrievedApps, app)
+				}
+			}
+
+			if !slices.Equal(expectedApps, retrievedApps) {
+				t.Errorf("Expected %v but got %v", expectedApps, retrievedApps)
+			}
+
+			if len(encounteredErrors) != 1 {
+				t.Errorf("Expected to receive one error, but received %d", len(encounteredErrors))
+			}
+		})
+
+		t.Run("it should start paging from specified page number when given", func(t *testing.T) {
+			expectedApps := []onspring.App{
+				{
+					Href: "https://test.com",
+					Id:   2,
+					Name: "App",
+				},
+			}
+
+			pageTwo := onspring.Page[onspring.App]{
+				TotalPages:   2,
+				TotalRecords: 2,
+				PageNumber:   2,
+				PageSize:     1,
+				Items:        []onspring.App{expectedApps[0]},
+			}
+
+			_, client := setupMockServer(t, func(w http.ResponseWriter, r *http.Request) {
+				if r.Method != http.MethodGet {
+					t.Errorf("Expected GET method, got %s", r.Method)
+				}
+
+				if r.URL.Path != "/apps" {
+					t.Errorf("Expected /apps endpoint, got %s", r.URL.Path)
+				}
+
+				pageNumber := r.URL.Query().Get("pageNumber")
+
+				if pageNumber == "2" {
+					jsonData, _ := json.Marshal(pageTwo)
+
+					w.WriteHeader(http.StatusOK)
+					w.Header().Set("Content-Type", "application/json")
+					w.Write(jsonData)
+				}
+			})
+
+			retrievedApps := []onspring.App{}
+
+			for app, _ := range client.Apps.GetAll(t.Context(), onspring.ForPageNumber(2)) {
+				retrievedApps = append(retrievedApps, app)
+			}
+
+			if !slices.Equal(expectedApps, retrievedApps) {
+				t.Errorf("Expected %v but got %v", expectedApps, retrievedApps)
+			}
+		})
+
+		t.Run("it should retrieve pages using specified page size when given", func(t *testing.T) {
+			expectedApps := []onspring.App{
+				{
+					Href: "https://test.com",
+					Id:   1,
+					Name: "App",
+				},
+				{
+					Href: "https://test.com",
+					Id:   2,
+					Name: "App",
+				},
+			}
+
+			page := onspring.Page[onspring.App]{
+				TotalPages:   1,
+				TotalRecords: 2,
+				PageNumber:   1,
+				PageSize:     2,
+				Items:        expectedApps,
+			}
+
+			_, client := setupMockServer(t, func(w http.ResponseWriter, r *http.Request) {
+				if r.Method != http.MethodGet {
+					t.Errorf("Expected GET method, got %s", r.Method)
+				}
+
+				if r.URL.Path != "/apps" {
+					t.Errorf("Expected /apps endpoint, got %s", r.URL.Path)
+				}
+
+				pageSize := r.URL.Query().Get("pageSize")
+
+				if pageSize == "2" {
+					jsonData, _ := json.Marshal(page)
+
+					w.WriteHeader(http.StatusOK)
+					w.Header().Set("Content-Type", "application/json")
+					w.Write(jsonData)
+				}
+			})
+
+			retrievedApps := []onspring.App{}
+
+			for app, _ := range client.Apps.GetAll(t.Context(), onspring.WithPageSize(2)) {
+				retrievedApps = append(retrievedApps, app)
+			}
+
+			if !slices.Equal(expectedApps, retrievedApps) {
+				t.Errorf("Expected %v but got %v", expectedApps, retrievedApps)
+			}
+		})
+	})
+
+	t.Run("GetBatch", func(t *testing.T) {
+		t.Run("it should return an error if context is nil", func(t *testing.T) {
+			_, client := setupMockServer(t, func(w http.ResponseWriter, r *http.Request) {
+				w.WriteHeader(http.StatusOK)
+			})
+
+			var nilContext context.Context = nil
+
+			_, err := client.Apps.GetBatch(nilContext, []int{})
+
+			if err == nil {
+				t.Errorf("Expected error for nil context, got nil")
+			}
+		})
+
+		t.Run("it should return an error if context is canceled", func(t *testing.T) {
+			_, client := setupMockServer(t, func(w http.ResponseWriter, r *http.Request) {
+				w.WriteHeader(http.StatusOK)
+			})
+
+			ctx, cancel := context.WithCancel(t.Context())
+
+			cancel()
+
+			_, err := client.Apps.GetBatch(ctx, []int{})
+
+			if err == nil {
+				t.Errorf("Expected error for canceled context, got nil")
+			}
+		})
+
+		t.Run("it should return an error if encounters a network error", func(t *testing.T) {
+			client := onspring.NewClient(
+				"test-api-key",
+				onspring.WithBaseURL("http://invalid-url"),
+				onspring.WithHTTPClient(&http.Client{Transport: &ErrorTransport{}}),
+			)
+
+			_, err := client.Apps.GetBatch(t.Context(), []int{})
+
+			if err == nil {
+				t.Errorf("Expected network error, got nil")
+			}
+		})
+
+		t.Run("it should return an error if create a request fails", func(t *testing.T) {
+			_, client := setupMockServer(t, func(w http.ResponseWriter, r *http.Request) {
+				w.WriteHeader(http.StatusOK)
+			})
+
+			invalidClient := onspring.NewClient(
+				"test-api-key",
+				onspring.WithBaseURL("http://[::1]:namedport"),
+				onspring.WithHTTPClient(client.HTTPClient()),
+			)
+
+			_, err := invalidClient.Apps.GetBatch(t.Context(), []int{})
+
+			if err == nil {
+				t.Errorf("Expected request creation error, got nil")
+			}
+		})
+
+		t.Run("it should return an error if the /apps/batch-get endpoint returns a non-200 status code", func(t *testing.T) {
+			_, client := setupMockServer(t, func(w http.ResponseWriter, r *http.Request) {
+				w.WriteHeader(http.StatusInternalServerError)
+			})
+
+			_, err := client.Apps.GetBatch(t.Context(), []int{})
+
+			if err == nil {
+				t.Errorf("Expected error, got nil")
+			}
+		})
+
+		t.Run("it should return a batch of apps when the /apps/batch-get endpoint returns a 200 status code", func(t *testing.T) {
+			apps := []onspring.App{
+				{
+					Href: "https://test.com",
+					Id:   1,
+					Name: "App",
+				},
+			}
+
+			expectedBatch := onspring.AppBatch{
+				Count: len(apps),
+				Items: apps,
+			}
+
+			_, client := setupMockServer(t, func(w http.ResponseWriter, r *http.Request) {
+				if r.Method != http.MethodPost {
+					t.Errorf("Expected POST method, got %s", r.Method)
+				}
+
+				if r.URL.Path != "/apps/batch-get" {
+					t.Errorf("Expected /apps/batch-get endpoint, got %s", r.URL.Path)
+				}
+
+				jsonData, _ := json.Marshal(expectedBatch)
+
+				w.WriteHeader(http.StatusOK)
+				w.Header().Set("Content-Type", "application/json")
+				w.Write(jsonData)
+			})
+
+			batch, _ := client.Apps.GetBatch(t.Context(), []int{apps[0].Id})
+
+			if !reflect.DeepEqual(expectedBatch, batch) {
+				t.Errorf("Expected %v but got %v", expectedBatch, batch)
 			}
 		})
 	})

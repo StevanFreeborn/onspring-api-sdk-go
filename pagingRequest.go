@@ -4,15 +4,17 @@ import "strconv"
 
 // PagingRequest contains pagination parameters for API requests.
 type PagingRequest struct {
-	pageNumber int
-	pageSize   int
+	// The page number to retrieve
+	PageNumber int
+	// The size of pages to retrieve
+	PageSize int
 }
 
 // ToParams converts the paging request to a map of query parameters.
 func (pr *PagingRequest) ToParams() map[string]string {
 	return map[string]string{
-		"pageNumber": strconv.Itoa(pr.pageNumber),
-		"pageSize":   strconv.Itoa(pr.pageSize),
+		"pageNumber": strconv.Itoa(pr.PageNumber),
+		"pageSize":   strconv.Itoa(pr.PageSize),
 	}
 }
 
@@ -22,13 +24,13 @@ type PagingOption func(*PagingRequest)
 // ForPageNumber sets the page number for a paging request.
 func ForPageNumber(pageNumber int) PagingOption {
 	return func(pr *PagingRequest) {
-		pr.pageNumber = pageNumber
+		pr.PageNumber = pageNumber
 	}
 }
 
 // WithPageSize sets the page size for a paging request.
 func WithPageSize(pageSize int) PagingOption {
 	return func(pr *PagingRequest) {
-		pr.pageSize = pageSize
+		pr.PageSize = pageSize
 	}
 }

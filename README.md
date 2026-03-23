@@ -12,7 +12,7 @@ This SDK was developed independently using Onspring's existing C# SDK, the Onspr
 
 ### Go
 
-Requires use of [Go](https://golang.org/dl/) version 1.18 or higher.
+Requires use of [Go](https://golang.org/dl/) version 1.23 or higher.
 
 ## Installation
 
