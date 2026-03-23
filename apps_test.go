@@ -119,7 +119,7 @@ func TestApps(t *testing.T) {
 
 				w.WriteHeader(http.StatusOK)
 				w.Header().Set("Content-Type", "application/json")
-				w.Write(jsonData)
+				_, _ = w.Write(jsonData)
 			})
 
 			page, err := client.Apps.List(t.Context())
@@ -160,7 +160,7 @@ func TestApps(t *testing.T) {
 				w.WriteHeader(http.StatusOK)
 			})
 
-			client.Apps.List(
+			_, _ = client.Apps.List(
 				t.Context(),
 				onspring.ForPageNumber(expectedPageNumber),
 				onspring.WithPageSize(expectedPageSize),
@@ -239,7 +239,7 @@ func TestApps(t *testing.T) {
 
 					w.WriteHeader(http.StatusOK)
 					w.Header().Set("Content-Type", "application/json")
-					w.Write(jsonData)
+					_, _ = w.Write(jsonData)
 				}
 
 				if pageNumber == "2" {
@@ -247,7 +247,7 @@ func TestApps(t *testing.T) {
 
 					w.WriteHeader(http.StatusOK)
 					w.Header().Set("Content-Type", "application/json")
-					w.Write(jsonData)
+					_, _ = w.Write(jsonData)
 				}
 			})
 
@@ -295,7 +295,7 @@ func TestApps(t *testing.T) {
 
 					w.WriteHeader(http.StatusOK)
 					w.Header().Set("Content-Type", "application/json")
-					w.Write(jsonData)
+					_, _ = w.Write(jsonData)
 				}
 
 				if pageNumber == "2" {
