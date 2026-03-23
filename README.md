@@ -76,8 +76,8 @@ You may wish to refer to the full [Onspring API documentation](https://software.
 
 ```go
 import (
-    "fmt"
-    "github.com/StevanFreeborn/onspring-api-sdk-go/onspring"
+  "fmt"
+  "github.com/StevanFreeborn/onspring-api-sdk-go/onspring"
 )
 
 client := onspring.NewClient("your-api-key")
@@ -85,7 +85,64 @@ client := onspring.NewClient("your-api-key")
 err := client.Ping.Get(context.TODO())
 
 if err == nil {
-    fmt.Println("Connection successful!")
+  fmt.Println("Connection successful!")
 }
 ```
 
+### Apps
+
+#### Get App by Id
+
+```go
+import (
+  "fmt"
+  "github.com/StevanFreeborn/onspring-api-sdk-go/onspring"
+)
+
+client := onspring.NewClient("your-api-key")
+
+app, err := client.Apps.Get(context.TODO(), 1)
+```
+
+#### Get Apps by Page
+
+##### Retrieve a single page
+
+```go
+import (
+  "fmt"
+  "github.com/StevanFreeborn/onspring-api-sdk-go/onspring"
+)
+
+client := onspring.NewClient("your-api-key")
+
+page, err := client.Apps.List(t.Context())
+```
+
+##### Retrieve all pages
+
+```go
+import (
+  "fmt"
+  "github.com/StevanFreeborn/onspring-api-sdk-go/onspring"
+)
+
+client := onspring.NewClient("your-api-key")
+
+for app, err := range client.Apps.ListAll(t.Context()) {
+  // Do stuff
+}
+```
+
+#### Get Apps by Batch
+
+```go
+import (
+  "fmt"
+  "github.com/StevanFreeborn/onspring-api-sdk-go/onspring"
+)
+
+client := onspring.NewClient("your-api-key")
+
+batch, err := client.Apps.GetMany(t.Context(), []int{ 1 })
+```
