@@ -29,7 +29,7 @@ type AppBatch struct {
 	Items []App `json:"items"`
 }
 
-// Get retrieves a paginated list of apps from the Onspring API.
+// List retrieves a paginated list of apps from the Onspring API.
 //
 // Parameters:
 //   - ctx: The context for the request
@@ -38,7 +38,7 @@ type AppBatch struct {
 // Returns:
 //   - Page[App]: A page of apps with pagination metadata
 //   - error: An error if the request fails
-func (a *AppsEndpoint) Get(ctx context.Context, pagingOpts ...PagingOption) (Page[App], error) {
+func (a *AppsEndpoint) List(ctx context.Context, pagingOpts ...PagingOption) (Page[App], error) {
 	pagingRequest := createPagingRequest(pagingOpts)
 
 	req, requestCreationErr := a.client.newRequest(ctx, http.MethodGet, appsPath, pagingRequest.ToParams(), nil)
@@ -58,7 +58,7 @@ func (a *AppsEndpoint) Get(ctx context.Context, pagingOpts ...PagingOption) (Pag
 	return page, nil
 }
 
-// GetAll returns an iterator that yields all Apps across all pages.
+// ListAll returns an iterator that yields all Apps across all pages.
 // It automatically handles pagination by making sequential calls to Get
 // until all items have been retrieved or the caller stops the iteration.
 //
@@ -74,12 +74,12 @@ func (a *AppsEndpoint) Get(ctx context.Context, pagingOpts ...PagingOption) (Pag
 //   - iter.Seq2[App, error]: An iterator yielding:
 //   - App: The individual application record.
 //   - error: An error if a specific page request fails during iteration.
-func (a *AppsEndpoint) GetAll(ctx context.Context, pagingOpts ...PagingOption) iter.Seq2[App, error] {
+func (a *AppsEndpoint) ListAll(ctx context.Context, pagingOpts ...PagingOption) iter.Seq2[App, error] {
 	return func(yield func(App, error) bool) {
 		pagingRequest := createPagingRequest(pagingOpts)
 
 		for {
-			page, err := a.Get(ctx, ForPageNumber(pagingRequest.PageNumber), WithPageSize(pagingRequest.PageSize))
+			page, err := a.List(ctx, ForPageNumber(pagingRequest.PageNumber), WithPageSize(pagingRequest.PageSize))
 
 			if err != nil {
 				yield(App{}, err)
@@ -101,7 +101,16 @@ func (a *AppsEndpoint) GetAll(ctx context.Context, pagingOpts ...PagingOption) i
 	}
 }
 
-func (a *AppsEndpoint) GetBatch(ctx context.Context, appIds []int) (AppBatch, error) {
+// GetMany retrieves a batch of apps from the Onspring API.
+//
+// Parameters:
+//   - ctx: The context for the request
+//   - appIds: The ids of the apps to retrieve
+//
+// Returns:
+//   - AppBatch: A batch of apps
+//   - error: An error if the request fails
+func (a *AppsEndpoint) GetMany(ctx context.Context, appIds []int) (AppBatch, error) {
 	req, requestCreationErr := a.client.newRequest(ctx, http.MethodPost, appsBatchPath, nil, appIds)
 
 	var appBatch AppBatch

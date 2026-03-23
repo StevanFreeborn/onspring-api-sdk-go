@@ -13,7 +13,7 @@ import (
 )
 
 func TestApps(t *testing.T) {
-	t.Run("Get", func(t *testing.T) {
+	t.Run("List", func(t *testing.T) {
 		t.Run("it should return an error if context is nil", func(t *testing.T) {
 			_, client := setupMockServer(t, func(w http.ResponseWriter, r *http.Request) {
 				w.WriteHeader(http.StatusOK)
@@ -21,7 +21,7 @@ func TestApps(t *testing.T) {
 
 			var nilContext context.Context = nil
 
-			_, err := client.Apps.Get(nilContext)
+			_, err := client.Apps.List(nilContext)
 
 			if err == nil {
 				t.Errorf("Expected error for nil context, got nil")
@@ -37,7 +37,7 @@ func TestApps(t *testing.T) {
 
 			cancel()
 
-			_, err := client.Apps.Get(ctx)
+			_, err := client.Apps.List(ctx)
 
 			if err == nil {
 				t.Errorf("Expected error for canceled context, got nil")
@@ -51,7 +51,7 @@ func TestApps(t *testing.T) {
 				onspring.WithHTTPClient(&http.Client{Transport: &ErrorTransport{}}),
 			)
 
-			_, err := client.Apps.Get(t.Context())
+			_, err := client.Apps.List(t.Context())
 
 			if err == nil {
 				t.Errorf("Expected network error, got nil")
@@ -69,7 +69,7 @@ func TestApps(t *testing.T) {
 				onspring.WithHTTPClient(client.HTTPClient()),
 			)
 
-			_, err := invalidClient.Apps.Get(t.Context())
+			_, err := invalidClient.Apps.List(t.Context())
 
 			if err == nil {
 				t.Errorf("Expected request creation error, got nil")
@@ -121,7 +121,7 @@ func TestApps(t *testing.T) {
 				w.Write(jsonData)
 			})
 
-			page, err := client.Apps.Get(t.Context())
+			page, err := client.Apps.List(t.Context())
 
 			if err != nil {
 				t.Errorf("Expected no error, got %v", err)
@@ -159,7 +159,7 @@ func TestApps(t *testing.T) {
 				w.WriteHeader(http.StatusOK)
 			})
 
-			client.Apps.Get(
+			client.Apps.List(
 				t.Context(),
 				onspring.ForPageNumber(expectedPageNumber),
 				onspring.WithPageSize(expectedPageSize),
@@ -171,7 +171,7 @@ func TestApps(t *testing.T) {
 				w.WriteHeader(http.StatusInternalServerError)
 			})
 
-			_, err := client.Apps.Get(t.Context())
+			_, err := client.Apps.List(t.Context())
 
 			if err == nil {
 				t.Errorf("Expected error, got nil")
@@ -179,13 +179,13 @@ func TestApps(t *testing.T) {
 		})
 	})
 
-	t.Run("GetAll", func(t *testing.T) {
+	t.Run("ListAll", func(t *testing.T) {
 		t.Run("it should return an error if fails to retrieve any pages of apps", func(t *testing.T) {
 			_, client := setupMockServer(t, func(w http.ResponseWriter, r *http.Request) {
 				w.WriteHeader(http.StatusInternalServerError)
 			})
 
-			for _, err := range client.Apps.GetAll(t.Context()) {
+			for _, err := range client.Apps.ListAll(t.Context()) {
 				if err == nil {
 					t.Errorf("Expected error, got nil")
 				}
@@ -252,7 +252,7 @@ func TestApps(t *testing.T) {
 
 			retrievedApps := []onspring.App{}
 
-			for app, _ := range client.Apps.GetAll(t.Context()) {
+			for app, _ := range client.Apps.ListAll(t.Context()) {
 				retrievedApps = append(retrievedApps, app)
 			}
 
@@ -305,7 +305,7 @@ func TestApps(t *testing.T) {
 			retrievedApps := []onspring.App{}
 			encounteredErrors := []error{}
 
-			for app, err := range client.Apps.GetAll(t.Context()) {
+			for app, err := range client.Apps.ListAll(t.Context()) {
 				if err != nil {
 					encounteredErrors = append(encounteredErrors, err)
 				} else {
@@ -361,7 +361,7 @@ func TestApps(t *testing.T) {
 
 			retrievedApps := []onspring.App{}
 
-			for app, _ := range client.Apps.GetAll(t.Context(), onspring.ForPageNumber(2)) {
+			for app, _ := range client.Apps.ListAll(t.Context(), onspring.ForPageNumber(2)) {
 				retrievedApps = append(retrievedApps, app)
 			}
 
@@ -414,7 +414,7 @@ func TestApps(t *testing.T) {
 
 			retrievedApps := []onspring.App{}
 
-			for app, _ := range client.Apps.GetAll(t.Context(), onspring.WithPageSize(2)) {
+			for app, _ := range client.Apps.ListAll(t.Context(), onspring.WithPageSize(2)) {
 				retrievedApps = append(retrievedApps, app)
 			}
 
@@ -424,7 +424,7 @@ func TestApps(t *testing.T) {
 		})
 	})
 
-	t.Run("GetBatch", func(t *testing.T) {
+	t.Run("GetMany", func(t *testing.T) {
 		t.Run("it should return an error if context is nil", func(t *testing.T) {
 			_, client := setupMockServer(t, func(w http.ResponseWriter, r *http.Request) {
 				w.WriteHeader(http.StatusOK)
@@ -432,7 +432,7 @@ func TestApps(t *testing.T) {
 
 			var nilContext context.Context = nil
 
-			_, err := client.Apps.GetBatch(nilContext, []int{})
+			_, err := client.Apps.GetMany(nilContext, []int{})
 
 			if err == nil {
 				t.Errorf("Expected error for nil context, got nil")
@@ -448,7 +448,7 @@ func TestApps(t *testing.T) {
 
 			cancel()
 
-			_, err := client.Apps.GetBatch(ctx, []int{})
+			_, err := client.Apps.GetMany(ctx, []int{})
 
 			if err == nil {
 				t.Errorf("Expected error for canceled context, got nil")
@@ -462,7 +462,7 @@ func TestApps(t *testing.T) {
 				onspring.WithHTTPClient(&http.Client{Transport: &ErrorTransport{}}),
 			)
 
-			_, err := client.Apps.GetBatch(t.Context(), []int{})
+			_, err := client.Apps.GetMany(t.Context(), []int{})
 
 			if err == nil {
 				t.Errorf("Expected network error, got nil")
@@ -480,7 +480,7 @@ func TestApps(t *testing.T) {
 				onspring.WithHTTPClient(client.HTTPClient()),
 			)
 
-			_, err := invalidClient.Apps.GetBatch(t.Context(), []int{})
+			_, err := invalidClient.Apps.GetMany(t.Context(), []int{})
 
 			if err == nil {
 				t.Errorf("Expected request creation error, got nil")
@@ -492,7 +492,7 @@ func TestApps(t *testing.T) {
 				w.WriteHeader(http.StatusInternalServerError)
 			})
 
-			_, err := client.Apps.GetBatch(t.Context(), []int{})
+			_, err := client.Apps.GetMany(t.Context(), []int{})
 
 			if err == nil {
 				t.Errorf("Expected error, got nil")
@@ -529,7 +529,7 @@ func TestApps(t *testing.T) {
 				w.Write(jsonData)
 			})
 
-			batch, _ := client.Apps.GetBatch(t.Context(), []int{apps[0].Id})
+			batch, _ := client.Apps.GetMany(t.Context(), []int{apps[0].Id})
 
 			if !reflect.DeepEqual(expectedBatch, batch) {
 				t.Errorf("Expected %v but got %v", expectedBatch, batch)
