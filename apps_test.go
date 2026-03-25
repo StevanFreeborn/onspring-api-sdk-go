@@ -514,6 +514,8 @@ func TestApps(t *testing.T) {
 				Items: apps,
 			}
 
+			expectedIds := []int{apps[0].Id}
+
 			_, client := setupMockServer(t, func(w http.ResponseWriter, r *http.Request) {
 				if r.Method != http.MethodPost {
 					t.Errorf("Expected POST method, got %s", r.Method)
@@ -523,6 +525,17 @@ func TestApps(t *testing.T) {
 					t.Errorf("Expected /apps/batch-get endpoint, got %s", r.URL.Path)
 				}
 
+				var ids []int
+				err := json.NewDecoder(r.Body).Decode(&ids)
+
+				if err != nil {
+					t.Errorf("Expected to decode request body, but got error: %v", err)
+				}
+
+				if !slices.Equal(expectedIds, ids) {
+					t.Errorf("Expected body to be %v but got %v", expectedIds, ids)
+				}
+
 				jsonData, _ := json.Marshal(expectedBatch)
 
 				w.WriteHeader(http.StatusOK)
@@ -530,7 +543,7 @@ func TestApps(t *testing.T) {
 				_, _ = w.Write(jsonData)
 			})
 
-			batch, _ := client.Apps.GetMany(t.Context(), []int{apps[0].Id})
+			batch, _ := client.Apps.GetMany(t.Context(), expectedIds)
 
 			if !reflect.DeepEqual(expectedBatch, batch) {
 				t.Errorf("Expected %v but got %v", expectedBatch, batch)

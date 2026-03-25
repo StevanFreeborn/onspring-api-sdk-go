@@ -92,7 +92,7 @@ func (a *AppsEndpoint) ListAll(ctx context.Context, pagingOpts ...PagingOption) 
 				}
 			}
 
-			if page.TotalPages == page.PageNumber {
+			if page.PageNumber >= page.TotalPages {
 				break
 			}
 
@@ -155,17 +155,4 @@ func (a *AppsEndpoint) Get(ctx context.Context, id int) (App, error) {
 	}
 
 	return app, nil
-}
-
-func createPagingRequest(pagingOpts []PagingOption) *PagingRequest {
-	pagingRequest := &PagingRequest{
-		PageNumber: 1,
-		PageSize:   50,
-	}
-
-	for _, opt := range pagingOpts {
-		opt(pagingRequest)
-	}
-
-	return pagingRequest
 }
