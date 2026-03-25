@@ -34,3 +34,16 @@ func WithPageSize(pageSize int) PagingOption {
 		pr.PageSize = pageSize
 	}
 }
+
+func createPagingRequest(pagingOpts []PagingOption) *PagingRequest {
+	pagingRequest := &PagingRequest{
+		PageNumber: 1,
+		PageSize:   50,
+	}
+
+	for _, opt := range pagingOpts {
+		opt(pagingRequest)
+	}
+
+	return pagingRequest
+}

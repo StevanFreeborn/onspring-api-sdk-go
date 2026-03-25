@@ -102,6 +102,12 @@ import (
 client := onspring.NewClient("your-api-key")
 
 app, err := client.Apps.Get(context.TODO(), 1)
+
+if err != nil {
+  fmt.Printf("Error: %v\n", err)
+} else {
+  fmt.Printf("Retrieved App: %+v\n", app)
+}
 ```
 
 #### Get Apps by Page
@@ -116,7 +122,13 @@ import (
 
 client := onspring.NewClient("your-api-key")
 
-page, err := client.Apps.List(t.Context())
+page, err := client.Apps.List(context.TODO())
+
+if err != nil {
+  fmt.Printf("Error: %v\n", err)
+} else {
+  fmt.Printf("Retrieved Page %d of Apps: %+v\n", page.PageNumber, page.Items)
+}
 ```
 
 ##### Retrieve all pages
@@ -129,8 +141,12 @@ import (
 
 client := onspring.NewClient("your-api-key")
 
-for app, err := range client.Apps.ListAll(t.Context()) {
-  // Do stuff
+for app, err := range client.Apps.ListAll(context.TODO()) {
+  if err != nil {
+    fmt.Printf("Error during iteration: %v\n", err)
+    break
+  }
+  fmt.Printf("Retrieved App: %+v\n", app)
 }
 ```
 
@@ -144,5 +160,95 @@ import (
 
 client := onspring.NewClient("your-api-key")
 
-batch, err := client.Apps.GetMany(t.Context(), []int{ 1 })
+batch, err := client.Apps.GetMany(context.TODO(), []int{ 1, 2 })
+
+if err != nil {
+  fmt.Printf("Error: %v\n", err)
+} else {
+  fmt.Printf("Retrieved App Batch (Count: %d): %+v\n", batch.Count, batch.Items)
+}
 ```
+
+### Fields
+
+#### Get Field by Id
+
+```go
+import (
+  "context"
+  "fmt"
+  "github.com/StevanFreeborn/onspring-api-sdk-go/onspring"
+)
+
+client := onspring.NewClient("your-api-key")
+
+field, err := client.Fields.Get(context.TODO(), 1)
+
+if err != nil {
+  fmt.Printf("Error: %v\n", err)
+} else {
+  fmt.Printf("Retrieved Field: %+v\n", field)
+}
+```
+
+#### Get Fields by App
+
+##### Retrieve a single page
+
+```go
+import (
+  "context"
+  "fmt"
+  "github.com/StevanFreeborn/onspring-api-sdk-go/onspring"
+)
+
+client := onspring.NewClient("your-api-key")
+
+page, err := client.Fields.List(context.TODO(), 1)
+
+if err != nil {
+  fmt.Printf("Error: %v\n", err)
+} else {
+  fmt.Printf("Retrieved Page %d of Fields: %+v\n", page.PageNumber, page.Items)
+}
+```
+
+##### Retrieve all pages
+
+```go
+import (
+  "context"
+  "fmt"
+  "github.com/StevanFreeborn/onspring-api-sdk-go/onspring"
+)
+
+client := onspring.NewClient("your-api-key")
+
+for field, err := range client.Fields.ListAll(context.TODO(), 1) {
+  if err != nil {
+    fmt.Printf("Error during iteration: %v\n", err)
+    break
+  }
+  fmt.Printf("Retrieved Field: %+v\n", field)
+}
+```
+
+#### Get Fields by Batch
+
+```go
+import (
+  "context"
+  "fmt"
+  "github.com/StevanFreeborn/onspring-api-sdk-go/onspring"
+)
+
+client := onspring.NewClient("your-api-key")
+
+batch, err := client.Fields.GetMany(context.TODO(), []int{ 1, 2 })
+
+if err != nil {
+  fmt.Printf("Error: %v\n", err)
+} else {
+  fmt.Printf("Retrieved Field Batch (Count: %d): %+v\n", batch.Count, batch.Items)
+}
+

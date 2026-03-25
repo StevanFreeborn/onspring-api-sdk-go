@@ -4,6 +4,7 @@
 package onspring
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -44,6 +45,8 @@ type Client struct {
 	Ping *PingEndpoint
 	// Apps provides access to the apps within an Onspring instance.
 	Apps *AppsEndpoint
+	// Fields provides access to the fields within an Onspring instance.
+	Fields *FieldsEndpoint
 }
 
 // NewClient creates a new Onspring API client with the provided API key.
@@ -78,6 +81,7 @@ func NewClient(apiKey string, opts ...ClientOption) *Client {
 
 	c.Ping = &PingEndpoint{client: c}
 	c.Apps = &AppsEndpoint{client: c}
+	c.Fields = &FieldsEndpoint{client: c}
 
 	return c
 }
@@ -179,7 +183,7 @@ func (c *Client) handleAPIError(resp *http.Response) error {
 // Returns:
 //   - *http.Request: The prepared HTTP request
 //   - error: An error if the context is nil or request creation fails
-func (c *Client) newRequest(ctx context.Context, method, path string, queryParams map[string]string, _ any) (*http.Request, error) {
+func (c *Client) newRequest(ctx context.Context, method, path string, queryParams map[string]string, body any) (*http.Request, error) {
 	if ctx == nil {
 		return nil, fmt.Errorf("context must not be nil")
 	}
@@ -201,6 +205,16 @@ func (c *Client) newRequest(ctx context.Context, method, path string, queryParam
 
 	var bodyReader io.Reader
 
+	if body != nil {
+		jsonData, err := json.Marshal(body)
+
+		if err != nil {
+			return nil, fmt.Errorf("failed to marshal request body: %w", err)
+		}
+
+		bodyReader = bytes.NewReader(jsonData)
+	}
+
 	req, err := http.NewRequestWithContext(ctx, method, validUrl.String(), bodyReader)
 
 	if err != nil {
@@ -209,6 +223,10 @@ func (c *Client) newRequest(ctx context.Context, method, path string, queryParam
 
 	req.Header.Set(defaultAPIKeyHeader, c.apiKey)
 	req.Header.Set(defaultAPIVersionHeader, c.apiVersion)
+
+	if body != nil {
+		req.Header.Set("Content-Type", "application/json")
+	}
 
 	return req, nil
 }
