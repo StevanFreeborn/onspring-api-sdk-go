@@ -51,6 +51,8 @@ type Client struct {
 	Lists *ListsEndpoint
 	// Reports provides access to the reports within an Onspring instance.
 	Reports *ReportsEndpoint
+	// Files provides access to the files within an Onspring instance.
+	Files *FilesEndpoint
 }
 
 // NewClient creates a new Onspring API client with the provided API key.
@@ -88,6 +90,7 @@ func NewClient(apiKey string, opts ...ClientOption) *Client {
 	c.Fields = &FieldsEndpoint{client: c}
 	c.Lists = &ListsEndpoint{client: c}
 	c.Reports = &ReportsEndpoint{client: c}
+	c.Files = &FilesEndpoint{client: c}
 
 	return c
 }
@@ -147,6 +150,80 @@ func (c *Client) doWithJsonResponse(req *http.Request, v any) error {
 	}
 
 	return json.NewDecoder(resp.Body).Decode(v)
+}
+
+// doWithBytesResponse executes an HTTP request and returns the raw response bytes and headers.
+// It performs the HTTP call, checks the response status code, and reads
+// the response body into a byte slice.
+//
+// Parameters:
+//   - req: The HTTP request to execute
+//
+// Returns:
+//   - []byte: The raw response body bytes
+//   - http.Header: The response headers
+//   - error: nil if the request succeeds, or an error if the request fails
+//     or returns a non-2xx status code
+func (c *Client) doWithBytesResponse(req *http.Request) ([]byte, http.Header, error) {
+	resp, err := c.httpClient.Do(req)
+
+	if err != nil {
+		return nil, nil, err
+	}
+
+	defer func() {
+		_ = resp.Body.Close()
+	}()
+
+	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
+		return nil, nil, c.handleAPIError(resp)
+	}
+
+	data, err := io.ReadAll(resp.Body)
+
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to read response body: %w", err)
+	}
+
+	return data, resp.Header, nil
+}
+
+// newMultipartRequest creates a new multipart/form-data HTTP request for the Onspring API.
+// It constructs the full URL, sets required authentication headers,
+// and prepares the multipart form data with the provided context.
+//
+// Parameters:
+//   - ctx: The context for the request
+//   - path: The API endpoint path
+//   - body: The request body as a reader (should be a multipart form body)
+//   - contentType: The content type header value (including boundary)
+//
+// Returns:
+//   - *http.Request: The prepared HTTP request
+//   - error: An error if the context is nil or request creation fails
+func (c *Client) newMultipartRequest(ctx context.Context, path string, body io.Reader, contentType string) (*http.Request, error) {
+	if ctx == nil {
+		return nil, fmt.Errorf("context must not be nil")
+	}
+
+	fullURL := fmt.Sprintf("%s/%s", strings.TrimRight(c.baseURL, "/"), strings.TrimLeft(path, "/"))
+	validUrl, urlParsingError := url.Parse(fullURL)
+
+	if urlParsingError != nil {
+		return nil, fmt.Errorf("failed to parse the request url: %w", urlParsingError)
+	}
+
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, validUrl.String(), body)
+
+	if err != nil {
+		return nil, fmt.Errorf("failed to create request: %w", err)
+	}
+
+	req.Header.Set(defaultAPIKeyHeader, c.apiKey)
+	req.Header.Set(defaultAPIVersionHeader, c.apiVersion)
+	req.Header.Set("Content-Type", contentType)
+
+	return req, nil
 }
 
 // handleAPIError processes error responses from the Onspring API.

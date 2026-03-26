@@ -380,4 +380,103 @@ for report, err := range client.Reports.ListAll(context.TODO(), 1) {
   }
   fmt.Printf("Retrieved Report: %+v\n", report)
 }
+```
+
+### Files
+
+#### Get File Info
+
+```go
+import (
+  "context"
+  "fmt"
+  "github.com/StevanFreeborn/onspring-api-sdk-go/onspring"
+)
+
+client := onspring.NewClient("your-api-key")
+
+fileInfo, err := client.Files.GetInfo(context.TODO(), 1, 2, 3)
+
+if err != nil {
+  fmt.Printf("Error: %v\n", err)
+} else {
+  fmt.Printf("File Name: %s\n", fileInfo.Name)
+  fmt.Printf("Content Type: %s\n", fileInfo.ContentType)
+}
+```
+
+#### Get File Content
+
+```go
+import (
+  "context"
+  "fmt"
+  "os"
+  "github.com/StevanFreeborn/onspring-api-sdk-go/onspring"
+)
+
+client := onspring.NewClient("your-api-key")
+
+fileContent, err := client.Files.GetContent(context.TODO(), 1, 2, 3)
+
+if err != nil {
+  fmt.Printf("Error: %v\n", err)
+} else {
+  fmt.Printf("File Name: %s\n", fileContent.FileName)
+  fmt.Printf("Content Type: %s\n", fileContent.ContentType)
+  os.WriteFile(fileContent.FileName, fileContent.Data, 0644)
+}
+```
+
+#### Delete File
+
+```go
+import (
+  "context"
+  "fmt"
+  "github.com/StevanFreeborn/onspring-api-sdk-go/onspring"
+)
+
+client := onspring.NewClient("your-api-key")
+
+err := client.Files.Delete(context.TODO(), 1, 2, 3)
+
+if err != nil {
+  fmt.Printf("Error: %v\n", err)
+} else {
+  fmt.Println("File deleted successfully!")
+}
+```
+
+#### Save File
+
+```go
+import (
+  "context"
+  "fmt"
+  "os"
+  "github.com/StevanFreeborn/onspring-api-sdk-go/onspring"
+)
+
+client := onspring.NewClient("your-api-key")
+
+file, _ := os.Open("document.pdf")
+defer file.Close()
+
+saveReq := onspring.SaveFileRequest{
+  RecordId:     1,
+  FieldId:      2,
+  FileName:     "document.pdf",
+  FileContents: file,
+  Notes:        "Uploaded via API",
+  ModifiedDate: "2024-01-01T00:00:00Z",
+}
+
+response, err := client.Files.Save(context.TODO(), saveReq)
+
+if err != nil {
+  fmt.Printf("Error: %v\n", err)
+} else {
+  fmt.Printf("Saved File Id: %d\n", response.Id)
+}
 
