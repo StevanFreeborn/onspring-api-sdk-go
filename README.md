@@ -479,4 +479,227 @@ if err != nil {
 } else {
   fmt.Printf("Saved File Id: %d\n", response.Id)
 }
+```
+
+### Records
+
+#### Get Record by Id
+
+```go
+import (
+  "context"
+  "fmt"
+  "github.com/StevanFreeborn/onspring-api-sdk-go/onspring"
+)
+
+client := onspring.NewClient("your-api-key")
+
+record, err := client.Records.Get(context.TODO(), 1, 1)
+
+if err != nil {
+  fmt.Printf("Error: %v\n", err)
+} else {
+  fmt.Printf("Retrieved Record: %+v\n", record)
+}
+```
+
+You can also specify which fields to include and the data format:
+
+```go
+record, err := client.Records.Get(
+  context.TODO(), 1, 1,
+  onspring.WithFieldIds([]int{1, 2, 3}),
+  onspring.WithRecordDataFormat("Formatted"),
+)
+```
+
+#### Get Records by App
+
+##### Retrieve a single page
+
+```go
+import (
+  "context"
+  "fmt"
+  "github.com/StevanFreeborn/onspring-api-sdk-go/onspring"
+)
+
+client := onspring.NewClient("your-api-key")
+
+page, err := client.Records.List(context.TODO(), 1)
+
+if err != nil {
+  fmt.Printf("Error: %v\n", err)
+} else {
+  fmt.Printf("Retrieved Page %d of Records: %+v\n", page.PageNumber, page.Items)
+}
+```
+
+You can combine paging, field, and data format options:
+
+```go
+page, err := client.Records.List(
+  context.TODO(), 1,
+  onspring.WithFieldIds([]int{1, 2}),
+  onspring.WithRecordDataFormat("Formatted"),
+  onspring.WithPaging(onspring.ForPageNumber(2), onspring.WithPageSize(10)),
+)
+```
+
+##### Retrieve all pages
+
+```go
+import (
+  "context"
+  "fmt"
+  "github.com/StevanFreeborn/onspring-api-sdk-go/onspring"
+)
+
+client := onspring.NewClient("your-api-key")
+
+for record, err := range client.Records.ListAll(context.TODO(), 1) {
+  if err != nil {
+    fmt.Printf("Error during iteration: %v\n", err)
+    break
+  }
+  fmt.Printf("Retrieved Record: %+v\n", record)
+}
+```
+
+#### Get Records by Batch
+
+```go
+import (
+  "context"
+  "fmt"
+  "github.com/StevanFreeborn/onspring-api-sdk-go/onspring"
+)
+
+client := onspring.NewClient("your-api-key")
+
+batch, err := client.Records.GetMany(context.TODO(), onspring.GetManyRecordsRequest{
+  AppId:     1,
+  RecordIds: []int{1, 2},
+  FieldIds:  []int{1, 2},
+})
+
+if err != nil {
+  fmt.Printf("Error: %v\n", err)
+} else {
+  fmt.Printf("Retrieved Record Batch (Count: %d): %+v\n", batch.Count, batch.Items)
+}
+```
+
+#### Query Records
+
+##### Retrieve a single page
+
+```go
+import (
+  "context"
+  "fmt"
+  "github.com/StevanFreeborn/onspring-api-sdk-go/onspring"
+)
+
+client := onspring.NewClient("your-api-key")
+
+page, err := client.Records.Query(context.TODO(), onspring.QueryRecordsRequest{
+  AppId:  1,
+  Filter: "field eq 'value'",
+})
+
+if err != nil {
+  fmt.Printf("Error: %v\n", err)
+} else {
+  fmt.Printf("Retrieved Page %d of Records: %+v\n", page.PageNumber, page.Items)
+}
+```
+
+##### Retrieve all pages
+
+```go
+import (
+  "context"
+  "fmt"
+  "github.com/StevanFreeborn/onspring-api-sdk-go/onspring"
+)
+
+client := onspring.NewClient("your-api-key")
+
+for record, err := range client.Records.QueryAll(context.TODO(), onspring.QueryRecordsRequest{
+  AppId:  1,
+  Filter: "field eq 'value'",
+}) {
+  if err != nil {
+    fmt.Printf("Error during iteration: %v\n", err)
+    break
+  }
+  fmt.Printf("Retrieved Record: %+v\n", record)
+}
+```
+
+#### Save Record
+
+```go
+import (
+  "context"
+  "fmt"
+  "github.com/StevanFreeborn/onspring-api-sdk-go/onspring"
+)
+
+client := onspring.NewClient("your-api-key")
+
+response, err := client.Records.Save(context.TODO(), onspring.SaveRecordRequest{
+  AppId:  1,
+  Fields: map[string]any{"1": "value", "2": 42},
+})
+
+if err != nil {
+  fmt.Printf("Error: %v\n", err)
+} else {
+  fmt.Printf("Saved Record Id: %d\n", response.Id)
+}
+```
+
+#### Delete Record
+
+```go
+import (
+  "context"
+  "fmt"
+  "github.com/StevanFreeborn/onspring-api-sdk-go/onspring"
+)
+
+client := onspring.NewClient("your-api-key")
+
+err := client.Records.Delete(context.TODO(), 1, 1)
+
+if err != nil {
+  fmt.Printf("Error: %v\n", err)
+} else {
+  fmt.Println("Record deleted successfully!")
+}
+```
+
+#### Delete Records by Batch
+
+```go
+import (
+  "context"
+  "fmt"
+  "github.com/StevanFreeborn/onspring-api-sdk-go/onspring"
+)
+
+client := onspring.NewClient("your-api-key")
+
+err := client.Records.DeleteMany(context.TODO(), onspring.DeleteManyRecordsRequest{
+  AppId:     1,
+  RecordIds: []int{1, 2, 3},
+})
+
+if err != nil {
+  fmt.Printf("Error: %v\n", err)
+} else {
+  fmt.Println("Records deleted successfully!")
+}
 
