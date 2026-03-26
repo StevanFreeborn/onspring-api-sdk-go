@@ -1,0 +1,35 @@
+name: Publish
+on:
+  push:
+    tags:
+      - "v*"
+jobs:
+  publish:
+    name: Publish to Go Module Proxy
+    runs-on: ubuntu-latest
+    steps:
+      - name: Request module from proxy
+        run: |
+          MODULE="github.com/StevanFreeborn/onspring-api-sdk-go"
+          VERSION="${GITHUB_REF_NAME}"
+          PROXY_URL="https://proxy.golang.org/${MODULE}/@v/${VERSION}.info"
+
+          echo "Requesting: $PROXY_URL"
+
+          # Request the module version to warm the proxy cache
+          # Retry up to 3 times with a delay since the proxy may need time to fetch
+          for i in 1 2 3; do
+            STATUS=$(curl -s -o /dev/null -w "%{http_code}" "$PROXY_URL")
+            echo "Attempt $i: HTTP $STATUS"
+
+            if [ "$STATUS" = "200" ]; then
+              echo "Module $MODULE@$VERSION is available on the Go module proxy"
+              exit 0
+            fi
+
+            echo "Waiting 30 seconds before retry..."
+            sleep 30
+          done
+
+          echo "Warning: Module may not be immediately available on the proxy (HTTP $STATUS)"
+          echo "It will be indexed automatically when first requested by a user"
