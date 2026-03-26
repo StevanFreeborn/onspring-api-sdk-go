@@ -138,7 +138,10 @@ func TestFields(t *testing.T) {
 				"isRequired": true,
 				"isUnique": false,
 				"outputType": "Number",
-				"values": ["1", "2", "3"]
+				"values": [
+					{"id": "a1", "name": "Value1", "sortOrder": 1, "numericValue": 1, "color": "#fff"},
+					{"id": "b2", "name": "Value2", "sortOrder": 2, "numericValue": 2, "color": "#000"}
+				]
 			}`
 
 			var field onspring.Field
@@ -161,7 +164,10 @@ func TestFields(t *testing.T) {
 
 			expectedFormulaField := onspring.FormulaField{
 				OutputType: "Number",
-				Values:     []string{"1", "2", "3"},
+				Values: []onspring.ListValue{
+					{Id: "a1", Name: "Value1", SortOrder: 1, NumericValue: 1, Color: "#fff"},
+					{Id: "b2", Name: "Value2", SortOrder: 2, NumericValue: 2, Color: "#000"},
+				},
 			}
 
 			if !reflect.DeepEqual(formulaField, expectedFormulaField) {
@@ -220,7 +226,10 @@ func TestFields(t *testing.T) {
 				"isRequired": false,
 				"isUnique": false,
 				"multiplicity": "MultiSelect",
-				"values": ["OptionA", "OptionB"],
+				"values": [
+					{"id": "aaa", "name": "OptionA", "sortOrder": 1, "numericValue": 0, "color": "#ffffff"},
+					{"id": "bbb", "name": "OptionB", "sortOrder": 2, "numericValue": 0, "color": "#000000"}
+				],
 				"listId": 456
 			}`
 
@@ -244,8 +253,11 @@ func TestFields(t *testing.T) {
 
 			expectedListField := onspring.ListField{
 				Multiplicity: "MultiSelect",
-				Values:       []string{"OptionA", "OptionB"},
-				ListId:       456,
+				Values: []onspring.ListValue{
+					{Id: "aaa", Name: "OptionA", SortOrder: 1, NumericValue: 0, Color: "#ffffff"},
+					{Id: "bbb", Name: "OptionB", SortOrder: 2, NumericValue: 0, Color: "#000000"},
+				},
+				ListId: 456,
 			}
 
 			if !reflect.DeepEqual(listField, expectedListField) {

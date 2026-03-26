@@ -31,8 +31,8 @@ type Field struct {
 
 // FormulaField represents a formula field type in Onspring
 type FormulaField struct {
-	OutputType string   `json:"outputType"`
-	Values     []string `json:"values"`
+	OutputType string      `json:"outputType"`
+	Values     []ListValue `json:"values"`
 }
 
 // ReferenceField represents a reference field type in Onspring
@@ -41,11 +41,20 @@ type ReferenceField struct {
 	ReferenceAppId string `json:"referenceAppId"`
 }
 
+// ListValue represents a value option within a list field in Onspring.
+type ListValue struct {
+	Id           string  `json:"id"`
+	Name         string  `json:"name"`
+	SortOrder    int     `json:"sortOrder"`
+	NumericValue float64 `json:"numericValue"`
+	Color        string  `json:"color"`
+}
+
 // ListField represents a list field type in Onspring
 type ListField struct {
-	Multiplicity string   `json:"multiplicity"`
-	Values       []string `json:"values"`
-	ListId       int      `json:"listId"`
+	Multiplicity string      `json:"multiplicity"`
+	Values       []ListValue `json:"values"`
+	ListId       int         `json:"listId"`
 }
 
 // UnmarshalJSON implements the json.Unmarshaler interface for Field.
