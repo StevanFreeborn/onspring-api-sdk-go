@@ -8,6 +8,9 @@ permissions:
 jobs:
   version:
     name: Version
+    outputs:
+      new_tag: ${{ steps.bump.outputs.new_tag }}
+      skip: ${{ steps.bump.outputs.skip }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -21,11 +24,15 @@ jobs:
           LATEST_TAG=$(git tag -l 'v*' --sort=-v:refname | head -n 1)
 
           if [ -z "$LATEST_TAG" ]; then
-            LATEST_TAG="v0.0.0"
-            COMMITS=$(git log --pretty=format:"%s" --no-merges)
-          else
-            COMMITS=$(git log "${LATEST_TAG}..HEAD" --pretty=format:"%s" --no-merges)
+            # No tags exist yet, create the initial v0.0.0 release
+            echo "No existing tags found. Creating initial v0.0.0 release."
+            echo "skip=false" >> "$GITHUB_OUTPUT"
+            echo "new_tag=v0.0.0" >> "$GITHUB_OUTPUT"
+            echo "initial=true" >> "$GITHUB_OUTPUT"
+            exit 0
           fi
+
+          COMMITS=$(git log "${LATEST_TAG}..HEAD" --pretty=format:"%s" --no-merges)
 
           echo "Latest tag: $LATEST_TAG"
           echo "Commits since last tag:"
@@ -76,20 +83,16 @@ jobs:
           echo "skip=false" >> "$GITHUB_OUTPUT"
           echo "new_tag=$NEW_TAG" >> "$GITHUB_OUTPUT"
           echo "previous_tag=$LATEST_TAG" >> "$GITHUB_OUTPUT"
+          echo "initial=false" >> "$GITHUB_OUTPUT"
       - name: Generate release notes
         if: steps.bump.outputs.skip == 'false'
-        id: notes
         run: |
-          PREVIOUS_TAG="${{ steps.bump.outputs.previous_tag }}"
-
-          if [ "$PREVIOUS_TAG" = "v0.0.0" ]; then
-            NOTES=$(git log --pretty=format:"- %s" --no-merges)
+          if [ "${{ steps.bump.outputs.initial }}" = "true" ]; then
+            echo "Initial release" > release_notes.txt
           else
-            NOTES=$(git log "${PREVIOUS_TAG}..HEAD" --pretty=format:"- %s" --no-merges)
+            PREVIOUS_TAG="${{ steps.bump.outputs.previous_tag }}"
+            git log "${PREVIOUS_TAG}..HEAD" --pretty=format:"- %s" --no-merges > release_notes.txt
           fi
-
-          # Write notes to a file to preserve newlines
-          echo "$NOTES" > release_notes.txt
       - name: Create tag and release
         if: steps.bump.outputs.skip == 'false'
         env:
@@ -103,3 +106,10 @@ jobs:
           gh release create "$NEW_TAG" \
             --title "$NEW_TAG" \
             --notes-file release_notes.txt
+  publish:
+    name: Publish
+    needs: version
+    if: needs.version.outputs.skip != 'true'
+    uses: ./.github/workflows/publish.yml
+    with:
+      version: ${{ needs.version.outputs.new_tag }}
