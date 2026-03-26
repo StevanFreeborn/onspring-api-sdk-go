@@ -1,5 +1,11 @@
 # Onspring API Go SDK
 
+[![Pull Request](https://github.com/StevanFreeborn/onspring-api-sdk-go/actions/workflows/pull_request.yml/badge.svg)](https://github.com/StevanFreeborn/onspring-api-sdk-go/actions/workflows/pull_request.yml)
+[![Version](https://github.com/StevanFreeborn/onspring-api-sdk-go/actions/workflows/version.yml/badge.svg)](https://github.com/StevanFreeborn/onspring-api-sdk-go/actions/workflows/version.yml)
+[![Publish](https://github.com/StevanFreeborn/onspring-api-sdk-go/actions/workflows/publish.yml/badge.svg)](https://github.com/StevanFreeborn/onspring-api-sdk-go/actions/workflows/publish.yml)
+[![Go Reference](https://pkg.go.dev/badge/github.com/StevanFreeborn/onspring-api-sdk-go.svg)](https://pkg.go.dev/github.com/StevanFreeborn/onspring-api-sdk-go)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE.md)
+
 The Go SDK for the Onspring API is meant to simplify development in Go for Onspring customers who want to build integrations with their Onspring instance.
 
 Note: This is an unofficial SDK for the Onspring API. It was not built in consultation with Onspring Technologies LLC or a member of their development team.
