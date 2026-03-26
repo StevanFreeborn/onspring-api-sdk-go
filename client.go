@@ -21,7 +21,7 @@ const (
 	// defaultTimeout is the default HTTP client timeout duration.
 	defaultTimeout = 120 * time.Second
 	// defaultAPIKeyHeader is the HTTP header name used for API key authentication.
-	defaultAPIKeyHeader = "x-api-key"
+	defaultAPIKeyHeader = "x-apikey"
 	// defaultAPIVersionHeader is the HTTP header name used to specify the API version.
 	defaultAPIVersionHeader = "x-api-version"
 	// defaultAPIVersion is the default Onspring API version to use.
