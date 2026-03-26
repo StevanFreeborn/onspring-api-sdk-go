@@ -53,6 +53,8 @@ type Client struct {
 	Reports *ReportsEndpoint
 	// Files provides access to the files within an Onspring instance.
 	Files *FilesEndpoint
+	// Records provides access to the records within an Onspring instance.
+	Records *RecordsEndpoint
 }
 
 // NewClient creates a new Onspring API client with the provided API key.
@@ -91,6 +93,7 @@ func NewClient(apiKey string, opts ...ClientOption) *Client {
 	c.Lists = &ListsEndpoint{client: c}
 	c.Reports = &ReportsEndpoint{client: c}
 	c.Files = &FilesEndpoint{client: c}
+	c.Records = &RecordsEndpoint{client: c}
 
 	return c
 }
