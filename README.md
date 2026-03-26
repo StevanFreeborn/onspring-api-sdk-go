@@ -251,4 +251,133 @@ if err != nil {
 } else {
   fmt.Printf("Retrieved Field Batch (Count: %d): %+v\n", batch.Count, batch.Items)
 }
+```
+
+### Lists
+
+#### Save List Item
+
+Create a new list item or update an existing one. To create a new item, omit the `Id` field. To update an existing item, provide the `Id` of the item to update.
+
+```go
+import (
+  "context"
+  "fmt"
+  "github.com/StevanFreeborn/onspring-api-sdk-go/onspring"
+)
+
+client := onspring.NewClient("your-api-key")
+
+numericValue := 1.0
+color := "#ff0000"
+
+item := onspring.SaveListItemRequest{
+  Name:         "New List Value",
+  NumericValue: &numericValue,
+  Color:        &color,
+}
+
+response, err := client.Lists.Save(context.TODO(), 1, item)
+
+if err != nil {
+  fmt.Printf("Error: %v\n", err)
+} else {
+  fmt.Printf("Saved List Item Id: %s\n", response.Id)
+}
+```
+
+#### Delete List Item
+
+```go
+import (
+  "context"
+  "fmt"
+  "github.com/StevanFreeborn/onspring-api-sdk-go/onspring"
+)
+
+client := onspring.NewClient("your-api-key")
+
+err := client.Lists.Delete(context.TODO(), 1, "d4a3c2b1-e5f6-7890-abcd-ef1234567890")
+
+if err != nil {
+  fmt.Printf("Error: %v\n", err)
+} else {
+  fmt.Println("List item deleted successfully!")
+}
+```
+
+### Reports
+
+#### Get Report by Id
+
+```go
+import (
+  "context"
+  "fmt"
+  "github.com/StevanFreeborn/onspring-api-sdk-go/onspring"
+)
+
+client := onspring.NewClient("your-api-key")
+
+report, err := client.Reports.Get(context.TODO(), 1)
+
+if err != nil {
+  fmt.Printf("Error: %v\n", err)
+} else {
+  fmt.Printf("Retrieved Report Columns: %v\n", report.Columns)
+  fmt.Printf("Retrieved Report Rows: %d\n", len(report.Rows))
+}
+```
+
+You can also specify the data format and data type for the report:
+
+```go
+report, err := client.Reports.Get(
+  context.TODO(),
+  1,
+  onspring.WithDataFormat("Formatted"),
+  onspring.WithDataType("ChartData"),
+)
+```
+
+#### Get Reports by App
+
+##### Retrieve a single page
+
+```go
+import (
+  "context"
+  "fmt"
+  "github.com/StevanFreeborn/onspring-api-sdk-go/onspring"
+)
+
+client := onspring.NewClient("your-api-key")
+
+page, err := client.Reports.List(context.TODO(), 1)
+
+if err != nil {
+  fmt.Printf("Error: %v\n", err)
+} else {
+  fmt.Printf("Retrieved Page %d of Reports: %+v\n", page.PageNumber, page.Items)
+}
+```
+
+##### Retrieve all pages
+
+```go
+import (
+  "context"
+  "fmt"
+  "github.com/StevanFreeborn/onspring-api-sdk-go/onspring"
+)
+
+client := onspring.NewClient("your-api-key")
+
+for report, err := range client.Reports.ListAll(context.TODO(), 1) {
+  if err != nil {
+    fmt.Printf("Error during iteration: %v\n", err)
+    break
+  }
+  fmt.Printf("Retrieved Report: %+v\n", report)
+}
 
