@@ -47,6 +47,8 @@ type Client struct {
 	Apps *AppsEndpoint
 	// Fields provides access to the fields within an Onspring instance.
 	Fields *FieldsEndpoint
+	// Lists provides access to the lists within an Onspring instance.
+	Lists *ListsEndpoint
 }
 
 // NewClient creates a new Onspring API client with the provided API key.
@@ -82,6 +84,7 @@ func NewClient(apiKey string, opts ...ClientOption) *Client {
 	c.Ping = &PingEndpoint{client: c}
 	c.Apps = &AppsEndpoint{client: c}
 	c.Fields = &FieldsEndpoint{client: c}
+	c.Lists = &ListsEndpoint{client: c}
 
 	return c
 }
