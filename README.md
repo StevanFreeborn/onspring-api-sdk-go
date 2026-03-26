@@ -304,4 +304,80 @@ if err != nil {
 } else {
   fmt.Println("List item deleted successfully!")
 }
+```
+
+### Reports
+
+#### Get Report by Id
+
+```go
+import (
+  "context"
+  "fmt"
+  "github.com/StevanFreeborn/onspring-api-sdk-go/onspring"
+)
+
+client := onspring.NewClient("your-api-key")
+
+report, err := client.Reports.Get(context.TODO(), 1)
+
+if err != nil {
+  fmt.Printf("Error: %v\n", err)
+} else {
+  fmt.Printf("Retrieved Report Columns: %v\n", report.Columns)
+  fmt.Printf("Retrieved Report Rows: %d\n", len(report.Rows))
+}
+```
+
+You can also specify the data format and data type for the report:
+
+```go
+report, err := client.Reports.Get(
+  context.TODO(),
+  1,
+  onspring.WithDataFormat("Formatted"),
+  onspring.WithDataType("ChartData"),
+)
+```
+
+#### Get Reports by App
+
+##### Retrieve a single page
+
+```go
+import (
+  "context"
+  "fmt"
+  "github.com/StevanFreeborn/onspring-api-sdk-go/onspring"
+)
+
+client := onspring.NewClient("your-api-key")
+
+page, err := client.Reports.List(context.TODO(), 1)
+
+if err != nil {
+  fmt.Printf("Error: %v\n", err)
+} else {
+  fmt.Printf("Retrieved Page %d of Reports: %+v\n", page.PageNumber, page.Items)
+}
+```
+
+##### Retrieve all pages
+
+```go
+import (
+  "context"
+  "fmt"
+  "github.com/StevanFreeborn/onspring-api-sdk-go/onspring"
+)
+
+client := onspring.NewClient("your-api-key")
+
+for report, err := range client.Reports.ListAll(context.TODO(), 1) {
+  if err != nil {
+    fmt.Printf("Error during iteration: %v\n", err)
+    break
+  }
+  fmt.Printf("Retrieved Report: %+v\n", report)
+}
 
